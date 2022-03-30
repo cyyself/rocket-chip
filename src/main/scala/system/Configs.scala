@@ -15,9 +15,9 @@ class BaseConfig extends Config(
   new WithDefaultMemPort() ++
   new WithDefaultMMIOPort() ++
   new WithDefaultSlavePort() ++
-  new WithTimebase(BigInt(1000000)) ++ // 1 MHz
+  new WithTimebase(BigInt(100000000)) ++ // 1 MHz
   new WithDTS("freechips,rocketchip-unknown", Nil) ++
-  new WithNExtTopInterrupts(2) ++
+  new WithNExtTopInterrupts(4) ++
   new BaseSubsystemConfig()
 )
 
@@ -84,3 +84,4 @@ class MMIOPortOnlyConfig extends Config(
 
 class BaseFPGAConfig extends Config(new BaseConfig ++ new WithCoherentBusTopology)
 class DefaultFPGAConfig extends Config(new WithNSmallCores(1) ++ new BaseFPGAConfig)
+class DefaultFPGASMPConfig extends Config(new WithNBigCores(2) ++ new BaseFPGAConfig)

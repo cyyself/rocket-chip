@@ -89,7 +89,7 @@ class WithNBigCores(n: Int, overrideIdOffset: Option[Int] = None) extends Config
     val prev = up(RocketTilesKey, site)
     val idOffset = overrideIdOffset.getOrElse(prev.size)
     val big = RocketTileParams(
-      core   = RocketCoreParams(mulDiv = Some(MulDivParams(
+      core   = RocketCoreParams(fpu = None, mulDiv = Some(MulDivParams(
         mulUnroll = 8,
         mulEarlyOut = true,
         divEarlyOut = true))),
@@ -395,7 +395,7 @@ class WithTimebase(hertz: BigInt) extends Config((site, here, up) => {
 class WithDefaultMemPort extends Config((site, here, up) => {
   case ExtMem => Some(MemoryPortParams(MasterPortParams(
                       base = x"8000_0000",
-                      size = x"1000_0000",
+                      size = x"8000_0000",
                       beatBytes = site(MemoryBusKey).beatBytes,
                       idBits = 4), 1))
 })
