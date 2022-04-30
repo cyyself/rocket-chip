@@ -61,7 +61,11 @@ class WithIncoherentBusTopology extends Config((site, here, up) => {
       pbus = site(PeripheryBusKey),
       fbus = site(FrontBusKey),
       cbus = site(ControlBusKey),
-      xTypes = SubsystemCrossingParams()))
+      xTypes = SubsystemCrossingParams(
+        sbusToCbusXType = site(SbusToCbusXTypeKey),
+        cbusToPbusXType = site(CbusToPbusXTypeKey),
+        fbusToSbusXType = site(FbusToSbusXTypeKey)),
+      driveClocksFromSBus = site(DriveClocksFromSBus)))
 })
 
 class WithCoherentBusTopology extends Config((site, here, up) => {
@@ -319,6 +323,36 @@ class WithoutFPU extends Config((site, here, up) => {
 class WithFPUWithoutDivSqrt extends Config((site, here, up) => {
   case RocketTilesKey => up(RocketTilesKey, site) map { r =>
     r.copy(core = r.core.copy(fpu = r.core.fpu.map(_.copy(divSqrt = false))))
+  }
+})
+
+class WithABLU extends Config((site, here, up) => {
+  case RocketTilesKey => up(RocketTilesKey, site) map { r =>
+    r.copy(core = r.core.copy(useABLU = true))
+  }
+})
+
+class WithBitManip extends Config((site, here, up) => {
+  case RocketTilesKey => up(RocketTilesKey, site) map { r =>
+    r.copy(core = r.core.copy(useBitManip = true))
+  }
+})
+
+class WithBitManipCrypto extends Config((site, here, up) => {
+  case RocketTilesKey => up(RocketTilesKey, site) map { r =>
+    r.copy(core = r.core.copy(useBitManipCrypto = true))
+  }
+})
+
+class WithCryptoNIST extends Config((site, here, up) => {
+  case RocketTilesKey => up(RocketTilesKey, site) map { r =>
+    r.copy(core = r.core.copy(useCryptoNIST = true))
+  }
+})
+
+class WithCryptoSM extends Config((site, here, up) => {
+  case RocketTilesKey => up(RocketTilesKey, site) map { r =>
+    r.copy(core = r.core.copy(useCryptoSM = true))
   }
 })
 
