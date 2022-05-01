@@ -85,4 +85,4 @@ class MMIOPortOnlyConfig extends Config(
 class BaseFPGAConfig extends Config(new BaseConfig ++ new WithCoherentBusTopology)
 class DefaultFPGAConfig extends Config(new WithNSmallCores(1) ++ new BaseFPGAConfig)
 class DefaultFPGASMPConfig extends Config(new WithNBigCores(2) ++ new BaseFPGAConfig)
-class ZenithalConfig extends Config(new WithNBigCores(1) ++ new BaseFPGAConfig ++ new WithBitManip ++ new WithBitManipCrypto ++ new WithCryptoNIST ++ new WithCryptoSM)
+class ZenithalConfig extends Config(new WithBitManip ++ new WithBitManipCrypto ++ new WithCryptoNIST ++ new WithCryptoSM ++ new WithNBigCores(1) ++ new BaseFPGAConfig)
