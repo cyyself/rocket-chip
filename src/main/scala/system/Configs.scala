@@ -86,3 +86,4 @@ class BaseFPGAConfig extends Config(new BaseConfig ++ new WithCoherentBusTopolog
 class DefaultFPGAConfig extends Config(new WithNSmallCores(1) ++ new BaseFPGAConfig)
 class DefaultFPGASMPConfig extends Config(new WithNBigCores(2) ++ new BaseFPGAConfig)
 class ZenithalConfig extends Config(new WithBitManip ++ new WithBitManipCrypto ++ new WithCryptoNIST ++ new WithCryptoSM ++ new WithNBigCores(1) ++ new BaseFPGAConfig)
+class Zenithal32Config extends Config(new WithRV32 ++ new WithBitManip ++ new WithBitManipCrypto ++ new WithCryptoNIST ++ new WithCryptoSM ++ new WithNBigCores(1) ++ new BaseFPGAConfig)
