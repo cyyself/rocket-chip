@@ -92,3 +92,4 @@ class BaseFPGAConfig extends Config(new BaseConfig ++ new WithCoherentBusTopolog
 class DefaultFPGAConfig extends Config(new WithNSmallCores(1) ++ new BaseFPGAConfig)
 
 class CloneTileConfig extends Config(new WithCloneRocketTiles(7) ++ new WithNBigCores(1) ++ new WithCoherentBusTopology ++ new BaseConfig)
+class CYYSoCConfig extends Config(new WithNExtTopInterrupts(4) ++ new WithTimebase(BigInt(100000000)) ++ new WithoutFPU ++ new WithNBigCores(2)  ++ new WithExtMemSize(0x80000000L) ++ new BaseFPGAConfig)
