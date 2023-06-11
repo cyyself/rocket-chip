@@ -21,8 +21,8 @@ import freechips.rocketchip.util._
  *  )
  */
 case class CLINTParams(
-  isACLINT: Boolean = false,
-  mtimer: Option[MTIMERParams]  = None,
+  isACLINT: Boolean = true,
+  mtimer: Option[MTIMERParams]  = Some(MTIMERParams()),
   mswi: Option[MSWIParams]      = Some(MSWIParams())
 ){
   require(mtimer.isDefined || mswi.isDefined, "If both mtimer and mswi are empty, please directly set CLINTKey to empty")
