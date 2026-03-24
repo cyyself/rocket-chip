@@ -375,6 +375,7 @@ object emulator extends Cross[Emulator](
   ("freechips.rocketchip.system.TestHarness", "freechips.rocketchip.system.DefaultFP16Config"),
   ("freechips.rocketchip.system.TestHarness", "freechips.rocketchip.system.DefaultBConfig"),
   ("freechips.rocketchip.system.TestHarness", "freechips.rocketchip.system.DefaultRV32BConfig"),
+  ("freechips.rocketchip.system.TestHarness", "freechips.rocketchip.system.DefaultFPGAConfig"),
 
   // Litex
   ("freechips.rocketchip.system.TestHarness", "freechips.rocketchip.system.LitexConfigSmall1x1"),

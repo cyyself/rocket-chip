@@ -54,7 +54,7 @@ class BaseSubsystemConfig extends Config ((site, here, up) => {
     beatBytes = 8,
     blockBytes = site(CacheBlockBytes))
   // Additional device Parameters
-  case BootROMLocated(InSubsystem) => Seq(BootROMParams(contentFileName = SystemFileName("./bootrom/bootrom.img")))
+  case BootROMLocated(InSubsystem) => Seq(BootROMParams(contentFileName = SystemFileName("./bootrom/bootrom.img"), hang = 0x10000))
   case HasTilesExternalResetVectorKey => false
   case DebugModuleKey => Some(DefaultDebugModuleParams(64))
   case CLINTKey => Some(CLINTParams())
@@ -268,7 +268,7 @@ class WithTimebase(hertz: BigInt) extends Config((site, here, up) => {
 class WithDefaultMemPort extends Config((site, here, up) => {
   case ExtMem => Some(MemoryPortParams(MasterPortParams(
                       base = x"8000_0000",
-                      size = x"1000_0000",
+                      size = x"8000_0000",
                       beatBytes = site(MemoryBusKey).beatBytes,
                       idBits = 4), 1))
 })
