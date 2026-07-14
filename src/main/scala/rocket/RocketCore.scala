@@ -33,6 +33,8 @@ case class RocketCoreParams(
   override val useZicbom: Boolean = false,
   override val useZicboz: Boolean = false,
   override val useZicbop: Boolean = false,
+  override val useSvpbmt: Boolean = false,
+  override val useSvnapot: Boolean = false,
   nLocalInterrupts: Int = 0,
   useNMI: Boolean = false,
   nBreakpoints: Int = 1,
@@ -969,6 +971,8 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
   io.ptw.ptbr := csr.io.ptbr
   io.ptw.hgatp := csr.io.hgatp
   io.ptw.vsatp := csr.io.vsatp
+  io.ptw.pbmte := csr.io.pbmte
+  io.ptw.hpbmte := csr.io.hpbmte
   (io.ptw.customCSRs.csrs zip csr.io.customCSRs).map { case (lhs, rhs) => lhs <> rhs }
   io.ptw.status := csr.io.status
   io.ptw.hstatus := csr.io.hstatus

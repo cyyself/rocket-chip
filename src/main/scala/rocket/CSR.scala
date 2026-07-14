@@ -133,7 +133,8 @@ class Envcfg extends Bundle {
   val cbie = UInt(2.W)
   val zero3 = UInt(3.W)
   val fiom = Bool()
-  def write(wdata: UInt, useZicbom: Boolean = false, useZicboz: Boolean = false): Unit = {
+  def write(wdata: UInt, useZicbom: Boolean = false, useZicboz: Boolean = false,
+            useSvpbmt: Boolean = false, pbmteWritable: Bool = true.B): Unit = {
     val new_envcfg = wdata.asTypeOf(new Envcfg)
     fiom := new_envcfg.fiom
     if (useZicboz) cbze := new_envcfg.cbze
@@ -142,6 +143,9 @@ class Envcfg extends Bundle {
       // CBIE is WARL; 0b10 is reserved, so leave the field unchanged when it is written
       when (new_envcfg.cbie =/= 2.U) { cbie := new_envcfg.cbie }
     }
+    // PBMTE (Svpbmt).  For henvcfg, PBMTE is read-only zero while menvcfg.PBMTE
+    // is clear, so gate the update with pbmteWritable (always true for menvcfg).
+    if (useSvpbmt) when (pbmteWritable) { pbmte := new_envcfg.pbmte } .otherwise { pbmte := false.B }
   }
 }
 
@@ -300,6 +304,10 @@ class CSRFileIO(hasBeu: Boolean)(implicit p: Parameters) extends CoreBundle
   val ptbr = Output(new PTBR())
   val hgatp = Output(new PTBR())
   val vsatp = Output(new PTBR())
+  /** menvcfg.PBMTE: Svpbmt enable for satp- and hgatp-controlled translation */
+  val pbmte = Output(Bool())
+  /** effective henvcfg.PBMTE: Svpbmt enable for vsatp-controlled (VS-stage) translation */
+  val hpbmte = Output(Bool())
   val evec = Output(UInt(vaddrBitsExtended.W))
   val exception = Input(Bool())
   val retire = Input(UInt(log2Up(1+retireWidth).W))
@@ -1049,6 +1057,9 @@ class CSRFile(
   io.ptbr := reg_satp
   io.hgatp := reg_hgatp
   io.vsatp := reg_vsatp
+  io.pbmte := reg_menvcfg.pbmte
+  // henvcfg.PBMTE is architecturally read-only zero while menvcfg.PBMTE is clear
+  io.hpbmte := reg_menvcfg.pbmte && reg_henvcfg.pbmte
   io.eret := insn_call || insn_break || insn_ret
   io.trap_return := insn_ret
   io.singleStep := reg_dcsr.step && !reg_debug
@@ -1498,11 +1509,18 @@ class CSRFile(
       when (decoded_addr(CSRs.vstvec))    { reg_vstvec := wdata }
       when (decoded_addr(CSRs.vscause))   { reg_vscause := wdata & scause_mask }
       when (decoded_addr(CSRs.vstval))    { reg_vstval := wdata }
-      when (decoded_addr(CSRs.henvcfg))   { reg_henvcfg.write(wdata, usingZicbom, usingZicboz) }
+      when (decoded_addr(CSRs.henvcfg))   { reg_henvcfg.write(wdata, usingZicbom, usingZicboz, usingSvpbmt, reg_menvcfg.pbmte) }
     }
     if (usingUser) {
       when (decoded_addr(CSRs.mcounteren)) { reg_mcounteren := wdata }
-      when (decoded_addr(CSRs.menvcfg))    { reg_menvcfg.write(wdata, usingZicbom, usingZicboz) }
+      when (decoded_addr(CSRs.menvcfg))    {
+        reg_menvcfg.write(wdata, usingZicbom, usingZicboz, usingSvpbmt)
+        // henvcfg.PBMTE is read-only zero while menvcfg.PBMTE is clear; keep the
+        // stored bit consistent so it also reads back as zero once menvcfg
+        // disables Svpbmt for the guest.
+        if (usingSvpbmt && usingHypervisor)
+          when (!wdata.asTypeOf(new Envcfg).pbmte) { reg_henvcfg.pbmte := false.B }
+      }
     }
     if (nBreakpoints > 0) {
       when (decoded_addr(CSRs.tselect)) { reg_tselect := wdata }

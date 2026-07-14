@@ -35,7 +35,13 @@ class ReplayInternal(implicit p: Parameters) extends HellaCacheReqInternal()(p)
   val sdq_id = UInt(log2Up(cfg.nSDQ).W)
 }
 
-class MSHRReq(implicit p: Parameters) extends Replay()(p) with HasMissInfo
+class MSHRReq(implicit p: Parameters) extends Replay()(p) with HasMissInfo {
+  // Svpbmt: the DTLB may mark a page non-cacheable (PBMT = NC/IO) even though its
+  // physical-address PMA supports caching.  This carries that per-page override
+  // so the MSHRFile routes the access to the uncached (MMIO) path.  Tied to 0
+  // when Svpbmt is disabled.
+  val tlb_uncacheable = Bool()
+}
 
 class MSHRReqInternal(implicit p: Parameters) extends ReplayInternal()(p) with HasMissInfo
 
@@ -379,8 +385,10 @@ class MSHRFile(implicit edge: TLEdgeOut, p: Parameters) extends L1HellaCacheModu
     val store_pending = Output(Bool())
   })
 
-  // determine if the request is cacheable or not
-  val cacheable = edge.manager.supportsAcquireBFast(io.req.bits.addr, lgCacheBlockBytes.U)
+  // determine if the request is cacheable or not: the address' PMA must support
+  // caching AND the page must not be marked non-cacheable by Svpbmt (PBMT=NC/IO).
+  val cacheable = edge.manager.supportsAcquireBFast(io.req.bits.addr, lgCacheBlockBytes.U) &&
+                  !(usingSvpbmt.B && io.req.bits.tlb_uncacheable)
 
   val sdq_val = RegInit(0.U(cfg.nSDQ.W))
   val sdq_alloc_id = PriorityEncoder(~sdq_val(cfg.nSDQ-1,0))
@@ -857,6 +865,13 @@ class NonBlockingDCacheModule(outer: NonBlockingDCache) extends HellaCacheModule
     s2_req.cmd := s1_req.cmd
   }
 
+  // Svpbmt: capture the DTLB's per-page cacheability alongside s2_req so a page
+  // whose PBMT is NC/IO routes to the uncached path even when its physical PMA
+  // supports caching.  Only meaningful for translated (non-phys) accesses.
+  val s2_tlb_uncacheable =
+    if (usingSvpbmt) RegEnable(!s1_req.phys && !dtlb.io.resp.cacheable, s1_clk_en)
+    else false.B
+
   // tags
   def onReset = L1Metadata(0.U, ClientMetadata.onReset)
   val meta = Module(new L1MetadataArray(() => onReset ))
@@ -973,6 +988,7 @@ class NonBlockingDCacheModule(outer: NonBlockingDCache) extends HellaCacheModule
   // miss handling
   mshrs.io.req.valid := s2_valid_masked && !s2_hit && (isPrefetch(s2_req.cmd) || isRead(s2_req.cmd) || isWrite(s2_req.cmd) || s2_cbo_zero)
   mshrs.io.req.bits.viewAsSupertype(new Replay) := s2_req.viewAsSupertype(new HellaCacheReq)
+  mshrs.io.req.bits.tlb_uncacheable := s2_tlb_uncacheable
   mshrs.io.req.bits.tag_match := s2_tag_match
   mshrs.io.req.bits.old_meta := Mux(s2_tag_match, L1Metadata(s2_repl_meta.tag, s2_hit_state), s2_repl_meta)
   mshrs.io.req.bits.way_en := Mux(s2_tag_match, s2_tag_match_way, s2_replaced_way_en)

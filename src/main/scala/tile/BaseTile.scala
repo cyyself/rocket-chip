@@ -129,7 +129,9 @@ trait HasNonDiplomaticTileParameters {
       (tileParams.core.useZba) -> "zba",
       (tileParams.core.useZbb) -> "zbb",
       (tileParams.core.useZbs) -> "zbs",
-      (tileParams.core.useConditionalZero) -> "zicond"
+      (tileParams.core.useConditionalZero) -> "zicond",
+      (tileParams.core.useSvpbmt) -> "svpbmt",
+      (tileParams.core.useSvnapot) -> "svnapot"
     ).filter(_._1).map(_._2)
 
     val cboExt = Seq(

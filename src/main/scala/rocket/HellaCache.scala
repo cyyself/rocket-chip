@@ -231,6 +231,8 @@ abstract class HellaCache(tileId: Int)(implicit p: Parameters) extends LazyModul
     "Zicbom requires a D$ whose set size does not exceed the page size")
   require(!tileParams.core.useZicboz || cfg.scratch.isEmpty,
     "Zicboz requires a D$")
+  require(!tileParams.core.useSvpbmt || (usingVM && cfg.scratch.isEmpty),
+    "Svpbmt requires a page-based MMU and a D$ (no scratchpad)")
 }
 
 class HellaCacheBundle(implicit p: Parameters) extends CoreBundle()(p) {

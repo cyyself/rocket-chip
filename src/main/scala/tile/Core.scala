@@ -31,6 +31,8 @@ trait CoreParams {
   val useZicbom: Boolean = false
   val useZicboz: Boolean = false
   val useZicbop: Boolean = false
+  val useSvpbmt: Boolean = false
+  val useSvnapot: Boolean = false
   val mulDiv: Option[MulDivParams]
   val fpu: Option[FPUParams]
   val fetchWidth: Int
@@ -101,6 +103,11 @@ trait HasCoreParameters extends HasTileParameters {
   val usingZicboz = coreParams.useZicboz
   val usingZicbop = coreParams.useZicbop
   val usingCBO = usingZicbom || usingZicboz
+  // Svpbmt reinterprets PTE bits [62:61] as page-based memory types, so it is
+  // only meaningful when page-based virtual memory is present.
+  val usingSvpbmt = coreParams.useSvpbmt && usingVM
+  // Svnapot uses PTE bit 63 (N) for NAPOT (64 KiB) leaf mappings; needs the MMU.
+  val usingSvnapot = coreParams.useSvnapot && usingVM
 
   val retireWidth = coreParams.retireWidth
   val fetchWidth = coreParams.fetchWidth

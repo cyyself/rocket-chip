@@ -455,8 +455,21 @@ class TLB(instruction: Boolean, lgMaxSize: Int, cfg: TLBConfig)(implicit edge: T
     val pte = io.ptw.resp.bits.pte
     val refill_v = r_vstage1_en || r_stage2_en
     val newEntry = Wire(new TLBEntryData)
-    newEntry.ppn := pte.ppn
-    newEntry.c := cacheable
+    // Svnapot: for a 64 KiB NAPOT leaf (PTE.N set), the low 4 bits of the output
+    // ppn come from the virtual page number, not the PTE.  Each 4 KiB page in the
+    // range is refilled with its own translation (a NAPOT PTE re-walks per page).
+    val napot = usingSvnapot.B && pte.n
+    newEntry.ppn := Mux(napot, Cat(pte.ppn(pte.ppn.getWidth-1, 4), r_refill_tag(3,0)), pte.ppn)
+    // Svpbmt: a nonzero PBMT overrides the PMA-derived memory type.  Both NC and
+    // IO are non-cacheable; IO is additionally non-idempotent / strongly-ordered
+    // (an I/O region), which we model with the "effects" attribute.  The override
+    // is monotonic w.r.t. the PMA -- it can only remove cacheability and add
+    // effects, never make an effectful/uncacheable PMA region cacheable -- so it
+    // cannot be used to bypass the ordering or side-effect guarantees the SoC's
+    // physical memory attributes already impose (see the two-stage note in PTW).
+    val pbmt_nc = usingSvpbmt.B && pte.pbmt === PBMT.NC.U
+    val pbmt_io = usingSvpbmt.B && pte.pbmt === PBMT.IO.U
+    newEntry.c := cacheable && !(pbmt_nc || pbmt_io)
     newEntry.u := pte.u
     newEntry.g := pte.g && pte.v
     newEntry.ae_ptw := io.ptw.resp.bits.ae_ptw
@@ -476,7 +489,7 @@ class TLB(instruction: Boolean, lgMaxSize: Int, cfg: TLBConfig)(implicit edge: T
     newEntry.ppp := prot_pp
     newEntry.pal := prot_al
     newEntry.paa := prot_aa
-    newEntry.eff := prot_eff
+    newEntry.eff := prot_eff || pbmt_io
     newEntry.fragmented_superpage := io.ptw.resp.bits.fragmented_superpage
     // refill special_entry
     when (special_entry.nonEmpty.B && !io.ptw.resp.bits.homogeneous) {

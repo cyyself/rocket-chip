@@ -283,6 +283,8 @@ class WithZicboz                                          extends RocketCoreConf
 class WithZicbop                                          extends RocketCoreConfig(_.copy(useZicbop = true))
 // enable all of the cache-block operation extensions (Zicbom, Zicboz, Zicbop)
 class WithCBO                                             extends RocketCoreConfig(_.copy(useZicbom = true, useZicboz = true, useZicbop = true))
+class WithSvpbmt                                          extends RocketCoreConfig(_.copy(useSvpbmt = true))
+class WithSvnapot                                        extends RocketCoreConfig(_.copy(useSvnapot = true))
 class WithB                                               extends RocketCoreConfig(_.copy(useZba = true, useZbb = true, useZbs = true))
 class WithSV48                                            extends WithPgLevels(4)
 class WithSV39                                            extends WithPgLevels(3)

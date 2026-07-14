@@ -370,6 +370,7 @@ object emulator extends Cross[Emulator](
   ("freechips.rocketchip.system.TestHarness", "freechips.rocketchip.system.MMIOPortOnlyConfig"),
   ("freechips.rocketchip.system.TestHarness", "freechips.rocketchip.system.CloneTileConfig"),
   ("freechips.rocketchip.system.TestHarness", "freechips.rocketchip.system.HypervisorConfig"),
+  ("freechips.rocketchip.system.TestHarness", "freechips.rocketchip.system.HypervisorCBOSvpbmtSvnapotConfig"),
   //
   ("freechips.rocketchip.system.TestHarness", "freechips.rocketchip.system.DefaultRV32Config"),
   ("freechips.rocketchip.system.TestHarness", "freechips.rocketchip.system.DefaultFP16Config"),
