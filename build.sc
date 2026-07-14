@@ -142,6 +142,28 @@ trait RocketChip
   def repositoriesTask = T.task(super.repositoriesTask() ++ v.sonatypesSnapshots)
 }
 
+// Saturn Vector Unit (dependencies/saturn submodule), integrated via
+// rocket-chip's RocketCoreVectorParams / RocketVectorUnit interface.  Depends on
+// rocketchip (+ its transitive hardfloat/chisel).  The shuttle/ integration
+// sources are excluded because the Shuttle core is not present in this build.
+object saturn extends millbuild.common.HasChisel with SbtModule {
+  def scalaVersion: T[String] = T(v.scala)
+  override def millSourcePath = os.pwd / "dependencies" / "saturn"
+  private def cv = v.chiselCrossVersions.keys.head
+  def chiselModule = None
+  def chiselPluginJar = T(None)
+  def chiselIvy = Some(v.chiselCrossVersions(cv)._1)
+  def chiselPluginIvy = Some(v.chiselCrossVersions(cv)._2)
+  override def moduleDeps = super.moduleDeps ++ Seq(rocketchip(cv))
+  override def mainClass = T(Some("freechips.rocketchip.diplomacy.Main"))
+  // add the in-repo Rocket+Saturn integration configs alongside Saturn's sources
+  override def sources = T.sources(super.sources() ++ Seq(PathRef(os.pwd / "vsrc-saturn")))
+  override def allSourceFiles = T {
+    super.allSourceFiles().filterNot(pr => pr.path.segments.toSeq.contains("shuttle"))
+  }
+  def repositoriesTask = T.task(super.repositoriesTask() ++ v.sonatypesSnapshots)
+}
+
 trait RocketChipPublishModule
   extends PublishModule {
   def pomSettings = PomSettings(
@@ -168,7 +190,7 @@ trait Emulator extends Cross.Module2[String, String] {
       os.proc(
         mill.util.Jvm.javaExe,
         "-jar",
-        rocketchip(v.chiselCrossVersions.keys.head).assembly().path,
+        saturn.assembly().path,
         "--dir", T.dest.toString,
         "--top", top,
         config.split('_').flatMap(c => Seq("--config", c)),
@@ -190,8 +212,7 @@ trait Emulator extends Cross.Module2[String, String] {
       os.proc("firtool",
         generator.chirrtl().path,
         s"--annotation-file=${generator.chiselAnno().path}",
-        "--disable-annotation-unknown",
-        "-dedup",
+        "--disable-annotation-unknown",        "-dedup",
         "-O=debug",
         "--split-verilog",
         "--preserve-values=named",
@@ -219,8 +240,7 @@ trait Emulator extends Cross.Module2[String, String] {
       os.proc("firtool",
         generator.chirrtl().path,
         s"--annotation-file=${generator.chiselAnno().path}",
-        "--disable-annotation-unknown",
-        "-dedup",
+        "--disable-annotation-unknown",        "-dedup",
         "-O=debug",
         "--split-verilog",
         "--preserve-values=named",
@@ -306,7 +326,7 @@ trait Emulator extends Cross.Module2[String, String] {
     def verilatorArgs = T.input {
       Seq(
         // format: off
-        "-Wno-UNOPTTHREADS", "-Wno-STMTDLY", "-Wno-LATCH", "-Wno-WIDTH", "--no-timing",
+        "-Wno-UNOPTTHREADS", "-Wno-STMTDLY", "-Wno-LATCH", "-Wno-WIDTH", "-Wno-UNSIGNED", "--no-timing",
         "--x-assign unique",
         """+define+PRINTF_COND=\$c\(\"verbose\",\"&&\",\"done_reset\"\)""",
         """+define+STOP_COND=\$c\(\"done_reset\"\)""",
@@ -370,6 +390,7 @@ object emulator extends Cross[Emulator](
   ("freechips.rocketchip.system.TestHarness", "freechips.rocketchip.system.MMIOPortOnlyConfig"),
   ("freechips.rocketchip.system.TestHarness", "freechips.rocketchip.system.CloneTileConfig"),
   ("freechips.rocketchip.system.TestHarness", "freechips.rocketchip.system.HypervisorConfig"),
+  ("freechips.rocketchip.system.TestHarness", "freechips.rocketchip.system.RocketSaturnConfig"),
   //
   ("freechips.rocketchip.system.TestHarness", "freechips.rocketchip.system.DefaultRV32Config"),
   ("freechips.rocketchip.system.TestHarness", "freechips.rocketchip.system.DefaultFP16Config"),

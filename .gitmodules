@@ -11,3 +11,6 @@
 	path = dependencies/diplomacy
 	url = https://github.com/chipsalliance/diplomacy.git
 	branch = master
+[submodule "dependencies/saturn"]
+	path = dependencies/saturn
+	url = https://github.com/ucb-bar/saturn-vectors.git
